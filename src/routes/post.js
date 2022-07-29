@@ -58,8 +58,8 @@ router.get('/photo/:postId', (req, res, next) => {
 router.post('/', cors(), auth, (req, res) => {
   // auth
   // , auth
-  console.log(req.body);
-  console.log('hello');
+  // console.log(req.body);
+  // console.log('hello');
 
   let form = new formidable.IncomingForm();
   form.keepExtensions = true;
@@ -125,7 +125,7 @@ router.put('/:postId', cors(), auth, (req, res) => {
 
   if (post.userId !== req.user._id.toString()) {
     console.log('cannot update others post');
-    return res.status(500).json({ error: 'cannot update others post' });
+    return res.status(403).json({ error: 'cannot update others post' });
   }
 
   let form = new formidable.IncomingForm();
@@ -144,7 +144,7 @@ router.put('/:postId', cors(), auth, (req, res) => {
 
     if (file.photo) {
       if (file.photo.size > 5000000)
-        return res.status(500).json({ error: 'file size too big' });
+        return res.status(413).json({ error: 'file size too big' });
 
       // console.log(post);
 
@@ -244,20 +244,23 @@ router.get('/timeline/all', cors(), auth, async (req, res) => {
       })
     );
 
-    res.json(userPosts.concat(...friendPosts));
+    const timeline = userPosts.concat(...friendPosts);
+    // console.log(timeline);
+    const sortedTimeline = timeline.sort((a, b) => {
+      if (a.createdAt != null && b.createdAt != null) {
+        return b.updatedAt - a.updatedAt;
+      } else {
+        return b.createdAt - b.createdAt;
+      }
+    });
+
+    // res.json(userPosts.concat(...friendPosts));
+    // console.log(sortedTimeline);
+    res.json(sortedTimeline);
   } catch (err) {
+    console.log(err);
     res.status(500).json(err);
   }
 });
-
-// upload post image
-// router.post('/upload', cors(), upload.single('file'), (req, res) => {
-//   try {
-//     return res.status(200).json('File uploded successfully');
-//   } catch (error) {
-//     console.error(error);
-//     return res.status(500).json(error);
-//   }
-// });
 
 module.exports = router;

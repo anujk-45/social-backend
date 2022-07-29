@@ -3,6 +3,8 @@ const validator = require('validator');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const SECRET_STRING = process.env.SECRET_STRING;
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -86,8 +88,6 @@ userSchema.pre('save', async function (next) {
 
   next();
 });
-
-const SECRET_STRING = 'helloworld';
 
 userSchema.methods.generateAuthToken = function () {
   const user = this;

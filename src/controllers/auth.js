@@ -4,10 +4,11 @@ const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 const password = require('secure-random-password');
 const bcrypt = require('bcrypt');
+const OAUTH_CLIENTID = process.env.OAUTH_CLIENTID;
+const SECRET_STRING = process.env.SECRET_STRING;
+const SEND_EMAIL_PASS = process.env.SEND_EMAIL_PASS;
 
-const client = new OAuth2Client(
-  '644150943784-dd4aaim7fuvgemorumocbbcgb4rmvdel.apps.googleusercontent.com'
-);
+const client = new OAuth2Client(OAUTH_CLIENTID);
 
 exports.verifyEmail = async (req, res) => {
   try {
@@ -50,8 +51,8 @@ exports.verifyToken = async (req, res) => {
 
 exports.signup = async (req, res) => {
   try {
-    console.log('Inside signup');
-    console.log(req.body);
+    // console.log('Inside signup');
+    // console.log(req.body);
 
     const userFound = await User.findOne({ email: req.body.email });
     if (userFound) {
@@ -83,7 +84,7 @@ exports.login = async (req, res) => {
       req.body.email,
       req.body.password
     );
-    console.log('found');
+    // console.log('found');
     const token = await user.generateAuthToken();
     const {
       _id,
@@ -137,7 +138,7 @@ exports.googleLogin = async (req, res) => {
       .verifyIdToken({
         idToken: tokenId,
         audience:
-          '644150943784-dd4aaim7fuvgemorumocbbcgb4rmvdel.apps.googleusercontent.com',
+          OAUTH_CLIENTID,
       })
       .then((response) => {
         // console.log(response.payload);
@@ -179,7 +180,7 @@ exports.googleLogin = async (req, res) => {
                 });
               } else {
                 console.log('Creating user');
-                let password = email + 'helloworld';
+                let password = email + 'addedstring';
                 const newUser = new User({ name, email, password });
                 newUser.save((err, data) => {
                   if (err) {
@@ -189,7 +190,7 @@ exports.googleLogin = async (req, res) => {
                     });
                   }
 
-                  const token = jwt.sign({ _id: data._id }, 'helloworld', {
+                  const token = jwt.sign({ _id: data._id }, SECRET_STRING, {  // TOENV
                     expiresIn: '7d',
                   });
                   const {
@@ -258,39 +259,12 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// exports.authCheck = async (req, res) => {
-//   try {
-//     const SECRET_STRING = 'helloworld';
-//     console.log('Inside auth');
-//     console.log(req.header);
-//     console.log(req.body);
-//     const token = req.header('Authorization').replace('Bearer ', '');
-//     const decoded = jwt.verify(token, SECRET_STRING);
-//     const user = await User.findOne({ _id: decoded._id });
-
-//     if (!user) {
-//       throw new Error();
-//     }
-
-//     req.user = user;
-
-//     const { _id, name, email } = user;
-//     res.json({
-//       token,
-//       user: { _id, name, email },
-//     });
-//   } catch (e) {
-//     console.log(e);
-//     res.status(401).send({ error: 'Please Authenticate' });
-//   }
-// };
-
 exports.sendMail = async (mailOptions) => {
   let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: 'connectbook8@gmail.com',
-      pass: 'mwjeglacuhjvumxn',
+      pass: SEND_EMAIL_PASS, 
     },
   });
 
